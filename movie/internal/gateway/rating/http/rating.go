@@ -4,28 +4,36 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"math/rand/v2"
 	"net/http"
 
 	"movieexample.com/movie/internal/gateway"
+	discovery "movieexample.com/pkg"
 	model "movieexample.com/rating/pkg"
 )
 
 // Gateway defines an HTTP gataway for a rating service
 type Gateway struct {
-	addr string
+	registry discovery.Registry
 }
 
 // New crates a new HTTP gataway for a rating service
-func New(addr string) *Gateway {
-	return &Gateway{addr}
+func New(registry discovery.Registry) *Gateway {
+	return &Gateway{registry}
 }
 
 // GetAggregatedRating returns the aggregated rating for a
 // record or ErrNotFound if there are no ratings for it.
 func (g *Gateway) GetAggregatedRating(ctx context.Context, recordID model.RecordID, recordType model.RecordType) (float64, error) {
-	req, err := http.NewRequest(http.MethodGet, g.addr+"/rating", nil)
+	url, err := getUrl(ctx, g.registry)
 	if err != nil {
-		return 0, nil
+		return 0, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return 0, err
 	}
 
 	req = req.WithContext(ctx)
@@ -58,7 +66,12 @@ func (g *Gateway) GetAggregatedRating(ctx context.Context, recordID model.Record
 
 // PutRating writes a rating.
 func (g *Gateway) PutRating(ctx context.Context, recordID model.RecordID, recordType model.RecordType, rating *model.Rating) error {
-	req, err := http.NewRequest(http.MethodPut, g.addr+"/rating", nil)
+	url, err := getUrl(ctx, g.registry)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
 	}
@@ -82,4 +95,16 @@ func (g *Gateway) PutRating(ctx context.Context, recordID model.RecordID, record
 		return fmt.Errorf("non-2xx response: %v", resp)
 	}
 	return nil
+}
+
+func getUrl(ctx context.Context, registry discovery.Registry) (string, error) {
+	addrs, err := registry.ServiceAddresses(ctx, "rating")
+	if err != nil {
+		return "", err
+	}
+
+	url := "http://" + addrs[rand.IntN(len(addrs))] + "/rating"
+	log.Println("Calling rating service. " + url)
+
+	return url, nil
 }
