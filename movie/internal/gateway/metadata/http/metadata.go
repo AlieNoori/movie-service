@@ -8,9 +8,9 @@ import (
 	"math/rand/v2"
 	"net/http"
 
-	model "movieexample.com/metadata/pkg"
+	"movieexample.com/metadata/pkg/model"
 	"movieexample.com/movie/internal/gateway"
-	discovery "movieexample.com/pkg"
+	"movieexample.com/pkg/discovery"
 )
 
 // Gateway defines a movie metadata HTTP gateway.
@@ -29,7 +29,6 @@ func (g *Gateway) Get(ctx context.Context, id string) (*model.Metadata, error) {
 		return nil, err
 	}
 
-	// url := " HYPERLINK \h" + addrs[rand.Intn(len(addrs))] + "/metadata"
 	url := "http://" + addrs[rand.IntN(len(addrs))] + "/metadata"
 	log.Println("Calling metadata service. Request: GET " + url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)

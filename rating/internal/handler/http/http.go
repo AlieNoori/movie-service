@@ -9,7 +9,7 @@ import (
 
 	"movieexample.com/rating/internal/controller/rating"
 	"movieexample.com/rating/internal/repository"
-	model "movieexample.com/rating/pkg"
+	"movieexample.com/rating/pkg/model"
 )
 
 // Handler defines a rating service controller.

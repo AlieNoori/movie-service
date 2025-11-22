@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"movieexample.com/rating/internal/repository"
-	model "movieexample.com/rating/pkg"
+	"movieexample.com/rating/pkg/model"
 )
 
 // Repository defines a rating repository.

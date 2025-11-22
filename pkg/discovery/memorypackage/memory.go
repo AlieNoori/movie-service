@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	discovery "movieexample.com/pkg"
+	"movieexample.com/pkg/discovery"
 )
 
 // Registry defines an in-memory service registry.

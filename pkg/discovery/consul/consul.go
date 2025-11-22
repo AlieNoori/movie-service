@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	consul "github.com/hashicorp/consul/api"
-	discovery "movieexample.com/pkg"
+	"movieexample.com/pkg/discovery"
 )
 
 // Registry defines a Consul-based service registry.

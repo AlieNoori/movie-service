@@ -5,11 +5,10 @@ import (
 	"errors"
 
 	"movieexample.com/rating/internal/repository"
-	model "movieexample.com/rating/pkg"
+	"movieexample.com/rating/pkg/model"
 )
 
-// ErrNotFound is returned when no ratings are found for a
-// record.
+// ErrNotFound is returned when no ratings are found for a record.
 var ErrNotFound = errors.New("ratings not found for a record")
 
 type ratingRepository interface {
@@ -27,8 +26,7 @@ func New(repo ratingRepository) *Controller {
 	return &Controller{repo}
 }
 
-// GetAggregatedRating returns the aggregated rating for a
-// record or ErrNotFound if there are no ratings for it.
+// GetAggregatedRating returns the aggregated rating for a record or ErrNotFound if there are no ratings for it.
 func (c *Controller) GetAggregatedRating(ctx context.Context, recordID model.RecordID, recordType model.RecordType) (float64, error) {
 	ratings, err := c.repo.Get(ctx, recordID, recordType)
 	if err != nil && err == repository.ErrNotFound {

@@ -9,8 +9,8 @@ import (
 	"net/http"
 
 	"movieexample.com/movie/internal/gateway"
-	discovery "movieexample.com/pkg"
-	model "movieexample.com/rating/pkg"
+	"movieexample.com/pkg/discovery"
+	"movieexample.com/rating/pkg/model"
 )
 
 // Gateway defines an HTTP gataway for a rating service
@@ -23,8 +23,7 @@ func New(registry discovery.Registry) *Gateway {
 	return &Gateway{registry}
 }
 
-// GetAggregatedRating returns the aggregated rating for a
-// record or ErrNotFound if there are no ratings for it.
+// GetAggregatedRating returns the aggregated rating for a record or ErrNotFound if there are no ratings for it.
 func (g *Gateway) GetAggregatedRating(ctx context.Context, recordID model.RecordID, recordType model.RecordType) (float64, error) {
 	url, err := getUrl(ctx, g.registry)
 	if err != nil {
