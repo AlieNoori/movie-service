@@ -16,7 +16,7 @@ import (
 	"movieexample.com/rating/internal/controller/rating"
 	grpchandler "movieexample.com/rating/internal/handler/grpc"
 	"movieexample.com/rating/internal/ingester/kafka"
-	"movieexample.com/rating/internal/repository/memory"
+	"movieexample.com/rating/internal/repository/mysql"
 )
 
 const serviceName = "rating"
@@ -49,7 +49,10 @@ func main() {
 
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
-	repo := memory.New()
+	repo, err := mysql.New()
+	if err != nil {
+		panic(err)
+	}
 
 	ingester, err := kafka.NewIngester("localhost", "rating", "ratings")
 	if err != nil {
@@ -57,15 +60,18 @@ func main() {
 	}
 
 	ctrl := rating.New(repo, ingester)
-	if err := ctrl.StartIngestion(ctx); err != nil {
-		log.Fatalf("failed to start ingestion: %v", err)
-	}
+
+	go func() {
+		if err := ctrl.StartIngestion(ctx); err != nil {
+			log.Fatalf("failed to start ingestion: %v", err)
+		}
+	}()
 
 	h := grpchandler.New(ctrl)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatalf("filad to listen: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 
 	srv := grpc.NewServer()

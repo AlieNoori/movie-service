@@ -47,7 +47,7 @@ func (h *Handler) PutRating(ctx context.Context, req *gen.PutRatingRequest) (*ge
 	if err := h.svc.PutRating(
 		ctx,
 		model.RecordID(req.RecordId),
-		model.RecordType(req.RatingValue),
+		model.RecordType(req.RecordType),
 		&model.Rating{
 			UserID: model.UserID(req.UserId),
 			Value:  model.RatingValue(req.RatingValue),

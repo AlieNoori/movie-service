@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-	fmt.Println("Creating a kafka producer")
+	fmt.Println("Creating a Kafka producer")
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 	if err != nil {
 		panic(err)
@@ -52,26 +52,22 @@ func readRatingEvents(fileName string) ([]model.RatingEvent, error) {
 		return nil, err
 	}
 
-	return ratings, err
+	return ratings, nil
 }
 
 func produceRatingEvents(topic string, producer *kafka.Producer, events []model.RatingEvent) error {
-	for _, ratingEvents := range events {
-		encodedEvent, err := json.Marshal(ratingEvents)
+	for _, event := range events {
+		encodedEvent, err := json.Marshal(event)
 		if err != nil {
 			return err
 		}
 
 		if err := producer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{
-				Topic:     &topic,
-				Partition: kafka.PartitionAny,
-			},
-			Value: encodedEvent,
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          []byte(encodedEvent),
 		}, nil); err != nil {
-			return nil
+			return err
 		}
 	}
-
 	return nil
 }
