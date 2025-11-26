@@ -3,7 +3,6 @@ package metadata
 import (
 	"context"
 	"errors"
-	"log"
 
 	"movieexample.com/metadata/internal/repository"
 	"movieexample.com/metadata/pkg/model"
@@ -19,26 +18,21 @@ type metadataRepository interface {
 
 // Controller defines a metadata service controller.
 type Controller struct {
-	repo  metadataRepository
-	cache metadataRepository
+	repo metadataRepository
 }
 
 // New creates a metadata service controller.
-func New(repo metadataRepository, cache metadataRepository) *Controller {
-	return &Controller{repo, cache}
+func New(repo metadataRepository) *Controller {
+	return &Controller{repo}
 }
 
 // Get returns movie metadata by id.
 func (c *Controller) Get(ctx context.Context, id string) (*model.Metadata, error) {
-	cacheRes, err := c.cache.Get(ctx, id)
-	if err == nil {
-		log.Println("Returning metadata from a cache for " + id)
-		return cacheRes, nil
-	}
-
 	res, err := c.repo.Get(ctx, id)
 	if err != nil && errors.Is(err, repository.ErrNotFound) {
 		return nil, ErrNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
 	return res, nil

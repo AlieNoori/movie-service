@@ -13,8 +13,8 @@ import (
 	"movieexample.com/gen"
 	"movieexample.com/metadata/internal/controller/metadata"
 	grpchandler "movieexample.com/metadata/internal/handler/grpc"
-	"movieexample.com/metadata/internal/repository/memory"
 	"movieexample.com/metadata/internal/repository/mysql"
+	"movieexample.com/metadata/internal/repository/redis"
 	"movieexample.com/pkg/discovery"
 	"movieexample.com/pkg/discovery/consul"
 )
@@ -53,8 +53,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	cache := memory.New()
-	svc := metadata.New(repo, cache)
+	cache := redis.New(repo)
+	svc := metadata.New(cache)
 
 	h := grpchandler.New(svc)
 
