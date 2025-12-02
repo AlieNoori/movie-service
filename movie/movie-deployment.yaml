@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: movie
+  template:
+    metadata:
+      labels:
+        app: movie
+    spec:
+      containers:
+        - name: movie
+          image: movie:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          volumeMounts:
+            - name: movie-vol
+              mountPath: /app
+      volumes:
+        - name: movie-vol
+          configMap:
+            name: movie-config
+            items:
+              - key: default.yaml
+                path: default.yaml

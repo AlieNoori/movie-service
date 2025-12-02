@@ -37,3 +37,8 @@ func (c *Controller) Get(ctx context.Context, id string) (*model.Metadata, error
 
 	return res, nil
 }
+
+// Put writes movie metadata to repository.
+func (c *Controller) Put(ctx context.Context, metadata *model.Metadata) error {
+	return c.repo.Put(ctx, metadata.ID, metadata)
+}

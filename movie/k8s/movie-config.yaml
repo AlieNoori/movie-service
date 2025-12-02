@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: movie-config
+data:
+  default.yaml: |
+    api:
+      port: 8083
+    serviceDiscovery:
+      consul:
+        address: http://consul-server.consul.svc.cluster.local:8500
