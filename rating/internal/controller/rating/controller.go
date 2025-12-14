@@ -58,7 +58,7 @@ func (c *Controller) PutRating(ctx context.Context, recordID model.RecordID, rec
 func (c *Controller) StartIngestion(ctx context.Context) error {
 	ch, err := c.ingester.Ingest(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for e := range ch {

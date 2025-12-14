@@ -22,7 +22,7 @@ func New(ctrl *movie.Controller) *Handler {
 	return &Handler{ctrl: ctrl}
 }
 
-// GetMovieDetails returns moviie details by id.
+// GetMovieDetails returns movie details by id.
 func (h *Handler) GetMovieDetails(ctx context.Context, req *gen.GetMovieDetailsRequest) (*gen.GetMovieDetailsResponse, error) {
 	if req == nil || req.MovieId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "nil req or empty")
@@ -35,10 +35,13 @@ func (h *Handler) GetMovieDetails(ctx context.Context, req *gen.GetMovieDetailsR
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &gen.GetMovieDetailsResponse{
-		MovieDetails: &gen.MovieDetails{
-			Metadata: model.MetadataToProto(&m.Metadata),
-			Rating:   *m.Rating,
-		},
-	}, nil
+	movieDetails := &gen.MovieDetails{
+		Metadata: model.MetadataToProto(&m.Metadata),
+	}
+
+	if m.Rating != nil {
+		movieDetails.Rating = *m.Rating
+	}
+
+	return &gen.GetMovieDetailsResponse{MovieDetails: movieDetails}, nil
 }

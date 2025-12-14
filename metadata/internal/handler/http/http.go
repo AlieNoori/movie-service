@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"movieexample.com/metadata/internal/controller/metadata"
-	"movieexample.com/metadata/internal/repository"
+	"movieexample.com/metadata/pkg/model"
 )
 
 // Handler defines a movie metadata HTTP handler.
@@ -30,7 +30,7 @@ func (h *Handler) GetMetadata(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	m, err := h.ctrl.Get(ctx, id)
-	if err != nil && errors.Is(err, repository.ErrNotFound) {
+	if err != nil && errors.Is(err, metadata.ErrNotFound) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	} else if err != nil {
@@ -43,4 +43,22 @@ func (h *Handler) GetMetadata(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Response encode error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+// PutMetadata handles PUT /metadata requests.
+func (h *Handler) PutMetadata(w http.ResponseWriter, r *http.Request) {
+	var metadata *model.Metadata
+	err := json.NewDecoder(r.Body).Decode(&metadata)
+	if err != nil || metadata == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = h.ctrl.Put(r.Context(), metadata)
+	if err != nil {
+		log.Printf("Put metadata: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

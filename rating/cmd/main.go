@@ -18,6 +18,7 @@ import (
 	grpchandler "movieexample.com/rating/internal/handler/grpc"
 	"movieexample.com/rating/internal/ingester/kafka"
 	"movieexample.com/rating/internal/repository/mysql"
+	"movieexample.com/rating/migrations"
 )
 
 const serviceName = "rating"
@@ -58,7 +59,8 @@ func main() {
 
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
-	repo, err := mysql.New()
+	// repo, err := mysql.New("root:password@/movieexample")
+	repo, err := mysql.NewWithMigration("root:password@/movieexample", migrations.FS, ".")
 	if err != nil {
 		panic(err)
 	}

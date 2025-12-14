@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"io/fs"
 
 	_ "github.com/go-sql-driver/mysql"
+	"movieexample.com/pkg/migrate"
 	"movieexample.com/rating/pkg/model"
 )
 
@@ -15,11 +17,26 @@ type Repository struct {
 }
 
 // New creates a new MySQL-based rating repository.
-func New() (*Repository, error) {
-	db, err := sql.Open("mysql", "root:password@/movieexample")
+func New(DSN string) (*Repository, error) {
+	db, err := sql.Open("mysql", DSN)
 	if err != nil {
 		return nil, err
 	}
+	return &Repository{db}, nil
+}
+
+// New creates a new MySQL-based repository and running migrations.
+func NewWithMigration(DSN string, fs fs.FS, dir string) (*Repository, error) {
+	db, err := sql.Open("mysql", DSN)
+	if err != nil {
+		return nil, err
+	}
+
+	err = migrate.MigrateFS(db, fs, ".")
+	if err != nil {
+		return nil, err
+	}
+
 	return &Repository{db}, nil
 }
 

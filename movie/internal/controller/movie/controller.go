@@ -6,7 +6,7 @@ import (
 
 	metadatamodel "movieexample.com/metadata/pkg/model"
 	"movieexample.com/movie/internal/gateway"
-	model "movieexample.com/movie/pkg"
+	"movieexample.com/movie/pkg/model"
 	ratingmodel "movieexample.com/rating/pkg/model"
 )
 

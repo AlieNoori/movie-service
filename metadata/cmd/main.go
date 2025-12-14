@@ -16,6 +16,7 @@ import (
 	grpchandler "movieexample.com/metadata/internal/handler/grpc"
 	"movieexample.com/metadata/internal/repository/mysql"
 	"movieexample.com/metadata/internal/repository/redis"
+	"movieexample.com/metadata/migrations"
 	"movieexample.com/pkg/discovery"
 	"movieexample.com/pkg/discovery/consul"
 )
@@ -59,7 +60,8 @@ func main() {
 
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
-	repo, err := mysql.New()
+	// repo, err := mysql.New("root:password@/movieexample")
+	repo, err := mysql.NewWithMigration("root:password@/movieexample", migrations.FS, ".")
 	if err != nil {
 		panic(err)
 	}
