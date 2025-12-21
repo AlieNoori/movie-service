@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option go_package = "/gen";
+
+message GetTokenRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message GetTokenResponse {
+  string token = 1;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  string username = 1;
+}
+
+message RegisterRequest {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+  string first_name = 4;
+  string last_name = 5;
+}
+
+message RegisterResponse {}
+
+service AuthService {
+  rpc GetToken(GetTokenRequest) returns (GetTokenResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+}

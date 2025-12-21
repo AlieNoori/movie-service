@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 
+	"google.golang.org/grpc/credentials"
 	"movieexample.com/gen"
 	"movieexample.com/internal/grpcutil"
 	"movieexample.com/pkg/discovery"
@@ -12,16 +13,17 @@ import (
 // Gateway defines an gRPC gateway for a rating service.
 type Gateway struct {
 	registry discovery.Registry
+	creds    credentials.TransportCredentials
 }
 
 // New creates a new gRPC gateway for a rating service.
-func New(registry discovery.Registry) *Gateway {
-	return &Gateway{registry}
+func New(registry discovery.Registry, creds credentials.TransportCredentials) *Gateway {
+	return &Gateway{registry, creds}
 }
 
 // GetAggregatedRating returns the aggregated rating for a record or ErrNotFound if there are no ratings for it.
 func (g *Gateway) GetAggregatedRating(ctx context.Context, recordID model.RecordID, recordType model.RecordType) (float64, error) {
-	conn, err := grpcutil.ServiceConnection(ctx, "rating", g.registry)
+	conn, err := grpcutil.ServiceConnection(ctx, "rating", g.registry, g.creds)
 	if err != nil {
 		return 0, err
 	}
@@ -38,7 +40,7 @@ func (g *Gateway) GetAggregatedRating(ctx context.Context, recordID model.Record
 }
 
 func (g *Gateway) PutRating(ctx context.Context, recordID model.RecordID, recordType model.RecordType, rating *model.Rating) error {
-	conn, err := grpcutil.ServiceConnection(ctx, "rating", g.registry)
+	conn, err := grpcutil.ServiceConnection(ctx, "rating", g.registry, g.creds)
 	if err != nil {
 		return err
 	}

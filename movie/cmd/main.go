@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"net"
@@ -15,9 +17,10 @@ import (
 	"movieexample.com/pkg/discovery/consul"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
-	metadatagateway "movieexample.com/movie/internal/gateway/metadata/grpc"
 
+	metadatagateway "movieexample.com/movie/internal/gateway/metadata/grpc"
 	ratinggateway "movieexample.com/movie/internal/gateway/rating/grpc"
 	grpchandler "movieexample.com/movie/internal/handler/grpc"
 )
@@ -25,7 +28,7 @@ import (
 const serviceName = "movie"
 
 func main() {
-	f, err := os.Open("default.yaml")
+	f, err := os.Open("configs/default.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -61,8 +64,21 @@ func main() {
 
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
-	metadataGateway := metadatagateway.New(registry)
-	ratingGateway := ratinggateway.New(registry)
+	certsByte, err := os.ReadFile("configs/server.crt")
+	if err != nil {
+		log.Fatalf("failed to read server certificate: %v", err)
+	}
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(certsByte) {
+		log.Fatalf("Failed to append server certificate to pool")
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		RootCAs: certPool,
+	})
+	metadataGateway := metadatagateway.New(registry, creds)
+
+	ratingGateway := ratinggateway.New(registry, creds)
 
 	ctrl := movie.New(ratingGateway, metadataGateway)
 	h := grpchandler.New(ctrl)
@@ -72,7 +88,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(grpc.Creds(creds))
 
 	reflection.Register(srv)
 	gen.RegisterMovieServiceServer(srv, h)

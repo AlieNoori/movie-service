@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"io/fs"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -70,11 +69,8 @@ func (r *Repository) Get(ctx context.Context, recordID model.RecordID, recordTyp
 
 // Put adds a rating for a given record.
 func (r *Repository) Put(ctx context.Context, recordID model.RecordID, recordType model.RecordType, rating *model.Rating) error {
-	if rating == nil {
-		return errors.New("rating is nil")
-	}
-
-	query := `INSERT INTO ratings (record_id,record_type,user_id,value) VALUES (?, ?, ?, ?)`
+	query := `INSERT INTO ratings (record_id,record_type,user_id,value) 
+	VALUES (?, ?, ?, ?)`
 	_, err := r.db.ExecContext(ctx, query, recordID, recordType, rating.UserID, rating.Value)
 	return err
 }

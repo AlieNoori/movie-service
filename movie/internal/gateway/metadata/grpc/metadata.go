@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 
+	"google.golang.org/grpc/credentials"
 	"movieexample.com/gen"
 	"movieexample.com/internal/grpcutil"
 	"movieexample.com/metadata/pkg/model"
@@ -12,16 +13,17 @@ import (
 // Gateway defines a movie metadata gRPC gateway.
 type Gateway struct {
 	registry discovery.Registry
+	creds    credentials.TransportCredentials
 }
 
 // New creates a new gRPC gateway for a movie metadata service.
-func New(registry discovery.Registry) *Gateway {
-	return &Gateway{registry}
+func New(registry discovery.Registry, creds credentials.TransportCredentials) *Gateway {
+	return &Gateway{registry, creds}
 }
 
 // Get returns movie metadata by a movie id.
 func (g *Gateway) Get(ctx context.Context, id string) (*model.Metadata, error) {
-	conn, err := grpcutil.ServiceConnection(ctx, "metadata", g.registry)
+	conn, err := grpcutil.ServiceConnection(ctx, "metadata", g.registry, g.creds)
 	if err != nil {
 		return nil, err
 	}

@@ -32,9 +32,10 @@ func (r *Repository) Get(_ context.Context, id string) (*model.Metadata, error) 
 	return m, nil
 }
 
+// Put adds movie metadata for a given movie id.
 func (r *Repository) Put(_ context.Context, id string, metadata *model.Metadata) error {
-	r.RLock()
-	defer r.RUnlock()
+	r.Lock()
+	defer r.Unlock()
 
 	r.data[id] = metadata
 

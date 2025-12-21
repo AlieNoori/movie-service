@@ -20,7 +20,7 @@ spec:
             - containerPort: 8082
           volumeMounts:
             - name: rating-vol
-              mountPath: /app
+              mountPath: /app/configs
           env:
             - name: DB_USERNAME
               valueFrom:

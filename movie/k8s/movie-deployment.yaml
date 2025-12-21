@@ -20,7 +20,7 @@ spec:
             - containerPort: 8083
           volumeMounts:
             - name: movie-vol
-              mountPath: /app
+              mountPath: /app/configs
       volumes:
         - name: movie-vol
           configMap:

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	"gopkg.in/yaml.v3"
 	"movieexample.com/gen"
@@ -24,7 +25,7 @@ import (
 const serviceName = "rating"
 
 func main() {
-	f, err := os.Open("default.yaml")
+	f, err := os.Open("configs/default.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -74,18 +75,23 @@ func main() {
 
 	go func() {
 		if err := ctrl.StartIngestion(ctx); err != nil {
-			log.Fatalf("failed to start ingestion: %v", err)
+			log.Printf("failed to start ingestion: %v", err)
 		}
 	}()
 
 	h := grpchandler.New(ctrl)
+
+	creds, err := credentials.NewServerTLSFromFile("configs/server.crt", "configs/server.key")
+	if err != nil {
+		log.Fatalf("Failed to load key pair: %v", err)
+	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(grpc.Creds(creds))
 	reflection.Register(srv)
 	gen.RegisterRatingServiceServer(srv, h)
 
