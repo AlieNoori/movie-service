@@ -6,6 +6,9 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
@@ -45,7 +48,7 @@ func main() {
 		panic(err)
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	instanceID := discovery.GenerateInstanceID(serviceName)
 	if err := registry.Register(ctx, instanceID, serviceName, fmt.Sprintf("auth:%d", port)); err != nil {
 		panic(err)
@@ -81,7 +84,25 @@ func main() {
 	srv := grpc.NewServer(grpc.Creds(creds))
 	reflection.Register(srv)
 	gen.RegisterAuthServiceServer(srv, h)
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		s := <-sigChan
+		cancel()
+		log.Printf("Received signal %v, attempting graceful shutdown", s)
+		srv.GracefulStop()
+		log.Println("Gracefully stopped the gRPC server")
+	}()
+
 	if err := srv.Serve(lis); err != nil {
 		panic(err)
 	}
+
+	wg.Done()
 }

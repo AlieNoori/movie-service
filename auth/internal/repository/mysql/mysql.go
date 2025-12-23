@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"io/fs"
 
+	_ "github.com/go-sql-driver/mysql"
 	"movieexample.com/auth/internal/repository"
 	"movieexample.com/auth/pkg/model"
 	"movieexample.com/pkg/migrate"

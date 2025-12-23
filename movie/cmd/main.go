@@ -8,14 +8,19 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
+	"golang.org/x/time/rate"
 	"gopkg.in/yaml.v3"
 	"movieexample.com/gen"
 	"movieexample.com/movie/internal/controller/movie"
 	"movieexample.com/pkg/discovery"
 	"movieexample.com/pkg/discovery/consul"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/ratelimit"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -26,6 +31,18 @@ import (
 )
 
 const serviceName = "movie"
+
+type limiter struct {
+	l *rate.Limiter
+}
+
+func newLimiter(limit int, burst int) *limiter {
+	return &limiter{rate.NewLimiter(rate.Limit(limit), burst)}
+}
+
+func (l *limiter) Limit() bool {
+	return l.l.Allow()
+}
 
 func main() {
 	f, err := os.Open("configs/default.yaml")
@@ -47,7 +64,7 @@ func main() {
 		panic(err)
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	instanceID := discovery.GenerateInstanceID(serviceName)
 	if err := registry.Register(ctx, instanceID, serviceName, fmt.Sprintf("movie:%d", port)); err != nil {
 		panic(err)
@@ -88,12 +105,31 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	srv := grpc.NewServer(grpc.Creds(creds))
+	const limit = 100
+	const burst = 100
+	l := newLimiter(limit, burst)
+	srv := grpc.NewServer(grpc.UnaryInterceptor(ratelimit.UnaryServerInterceptor(l)))
 
 	reflection.Register(srv)
 	gen.RegisterMovieServiceServer(srv, h)
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		s := <-sigChan
+		cancel()
+		log.Printf("Received signal %v, attempting graceful shutdown", s)
+		srv.GracefulStop()
+		log.Println("Gracefully stopped the gRPC server")
+	}()
+
 	if err := srv.Serve(lis); err != nil {
 		panic(err)
 	}
+	wg.Wait()
 }
