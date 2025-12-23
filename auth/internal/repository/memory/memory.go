@@ -57,3 +57,10 @@ func (r *Repository) Put(_ context.Context, user *model.User) error {
 
 	return nil
 }
+
+// Close clears the in-memory data store.
+func (r *Repository) Close() error {
+	clear(r.userByEmail)
+	clear(r.userByID)
+	return nil
+}

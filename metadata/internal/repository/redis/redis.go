@@ -13,6 +13,8 @@ import (
 type fallbackRepository interface {
 	Get(ctx context.Context, id string) (*model.Metadata, error)
 	Put(ctx context.Context, id string, metadata *model.Metadata) error
+
+	Close() error
 }
 
 // Repository defines a Redis-based movie metadata cache repository.
@@ -83,4 +85,19 @@ func (r *Repository) Put(ctx context.Context, id string, metadata *model.Metadat
 	}
 
 	return r.client.Set(ctx, key, vb, r.ttl).Err()
+}
+
+// Close gracefully shuts down the Redis client and the underlying fallback repository.
+func (r *Repository) Close() error {
+	err := r.fallback.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close fallback repository: %w", err)
+	}
+
+	err = r.client.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

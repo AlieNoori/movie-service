@@ -69,6 +69,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer repo.Close()
+
 	controller := auth.New(repo, func() []byte { return []byte(SECRET) })
 	h := grpchandler.New(controller)
 

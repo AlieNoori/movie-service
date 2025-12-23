@@ -68,6 +68,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer repo.Close()
 
 	ingester, err := kafka.NewIngester(cfg.Kafka.Address, cfg.Kafka.GroupID, cfg.Kafka.Topic)
 	if err != nil {

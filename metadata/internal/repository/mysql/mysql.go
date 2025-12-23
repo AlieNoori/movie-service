@@ -72,3 +72,8 @@ func (r *Repository) Put(ctx context.Context, id string, metadata *model.Metadat
 
 	return err
 }
+
+// Close gracefully shuts down the MySQL connection.
+func (r *Repository) Close() error {
+	return r.db.Close()
+}

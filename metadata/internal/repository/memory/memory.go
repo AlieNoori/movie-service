@@ -41,3 +41,9 @@ func (r *Repository) Put(_ context.Context, id string, metadata *model.Metadata)
 
 	return nil
 }
+
+// Close clears the in-memory data store.
+func (r *Repository) Close() error {
+	clear(r.data)
+	return nil
+}

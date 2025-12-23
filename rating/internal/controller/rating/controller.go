@@ -15,6 +15,8 @@ var ErrNotFound = errors.New("ratings not found for a record")
 type ratingRepository interface {
 	Get(ctx context.Context, recordID model.RecordID, recordType model.RecordType) ([]model.Rating, error)
 	Put(ctx context.Context, recordID model.RecordID, recordType model.RecordType, rating *model.Rating) error
+
+	Close() error
 }
 
 type ratingIngester interface {

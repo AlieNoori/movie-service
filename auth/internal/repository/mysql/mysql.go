@@ -111,3 +111,8 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*model.User, error
 
 	return user, nil
 }
+
+// Close gracefully shuts down the MySQL connection.
+func (r *Repository) Close() error {
+	return r.db.Close()
+}

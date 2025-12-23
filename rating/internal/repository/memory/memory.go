@@ -39,3 +39,9 @@ func (r *Repository) Put(_ context.Context, recordID model.RecordID, recordType 
 	r.data[recordType][recordID] = append(r.data[recordType][recordID], *rating)
 	return nil
 }
+
+// Close clears the in-memory data store.
+func (r *Repository) Close() error {
+	clear(r.data)
+	return nil
+}

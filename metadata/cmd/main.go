@@ -69,6 +69,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer repo.Close()
+
 	cache := redis.New(repo)
 	svc := metadata.New(cache)
 
