@@ -7,3 +7,5 @@ kafka:
   address: localhost
   groupId: rating
   topic: ratings
+jaeger:
+  url: http://localhost:14268/api/traces

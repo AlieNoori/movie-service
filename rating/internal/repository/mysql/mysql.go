@@ -6,9 +6,12 @@ import (
 	"io/fs"
 
 	_ "github.com/go-sql-driver/mysql"
+	"go.opentelemetry.io/otel"
 	"movieexample.com/pkg/migrate"
 	"movieexample.com/rating/pkg/model"
 )
+
+const tracerID = "rating-repository-mysql"
 
 // Repository defines a MySQL-based rating repository.
 type Repository struct {
@@ -41,6 +44,8 @@ func NewWithMigration(DSN string, fs fs.FS, dir string) (*Repository, error) {
 
 // Get retrieves all ratings for a given record.
 func (r *Repository) Get(ctx context.Context, recordID model.RecordID, recordType model.RecordType) ([]model.Rating, error) {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/Get")
+	defer span.End()
 	query := `SELECT user_id,value FROM ratings WHERE record_id=? AND record_type=?`
 	rows, err := r.db.QueryContext(ctx, query, recordID, recordType)
 	if err != nil {
@@ -69,6 +74,9 @@ func (r *Repository) Get(ctx context.Context, recordID model.RecordID, recordTyp
 
 // Put adds a rating for a given record.
 func (r *Repository) Put(ctx context.Context, recordID model.RecordID, recordType model.RecordType, rating *model.Rating) error {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/Put")
+	defer span.End()
+
 	query := `INSERT INTO ratings (record_id,record_type,user_id,value) 
 	VALUES (?, ?, ?, ?)`
 	_, err := r.db.ExecContext(ctx, query, recordID, recordType, rating.UserID, rating.Value)

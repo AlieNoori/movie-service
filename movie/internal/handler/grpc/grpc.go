@@ -25,7 +25,7 @@ func New(ctrl *movie.Controller) *Handler {
 // GetMovieDetails returns movie details by id.
 func (h *Handler) GetMovieDetails(ctx context.Context, req *gen.GetMovieDetailsRequest) (*gen.GetMovieDetailsResponse, error) {
 	if req == nil || req.MovieId == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "nil req or empty")
+		return nil, status.Errorf(codes.InvalidArgument, "nil req or empty id")
 	}
 
 	m, err := h.ctrl.Get(ctx, req.MovieId)

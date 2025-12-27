@@ -4,6 +4,7 @@ type config struct {
 	API              apiConfig              `yaml:"api"`
 	ServiceDiscovery serviceDiscoveryConfig `yaml:"serviceDiscovery"`
 	Kafka            kafkaConfig            `yaml:"kafka"`
+	Jaeger           jaegerConfig           `yaml:"jaeger"`
 }
 
 type apiConfig struct {
@@ -21,4 +22,8 @@ type kafkaConfig struct {
 	Address string `yaml:"address"`
 	Topic   string `yaml:"topic"`
 	GroupID string `yaml:"groupID"`
+}
+
+type jaegerConfig struct {
+	URL string `yaml:"url"`
 }

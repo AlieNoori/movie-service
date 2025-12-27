@@ -30,12 +30,11 @@ func (g *Gateway) Get(ctx context.Context, id string) (*model.Metadata, error) {
 		return nil, err
 	}
 	defer conn.Close()
-
 	client := gen.NewMetadataServiceClient(conn)
-
+	var resp *gen.GetMetadataResponse
 	const maxRetries = 5
 	for i := 0; i < maxRetries; i++ {
-		resp, err := client.GetMetadata(ctx, &gen.GetMetadataRequest{MovieId: id})
+		resp, err = client.GetMetadata(ctx, &gen.GetMetadataRequest{MovieId: id})
 		if err != nil {
 			if shouldRetry(err) {
 				continue

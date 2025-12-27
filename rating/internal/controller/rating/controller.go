@@ -3,7 +3,6 @@ package rating
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"movieexample.com/rating/internal/repository"
 	"movieexample.com/rating/pkg/model"
@@ -64,7 +63,6 @@ func (c *Controller) StartIngestion(ctx context.Context) error {
 	}
 
 	for e := range ch {
-		fmt.Printf("Consumed a message: %v\n", e)
 		if err := c.PutRating(ctx, e.RecordID, e.RecordType, &model.Rating{UserID: e.UserID, Value: e.Value}); err != nil {
 			return err
 		}

@@ -6,10 +6,13 @@ import (
 	"io/fs"
 
 	_ "github.com/go-sql-driver/mysql"
+	"go.opentelemetry.io/otel"
 	"movieexample.com/metadata/internal/repository"
 	"movieexample.com/metadata/pkg/model"
 	"movieexample.com/pkg/migrate"
 )
+
+const tracerID = "metadata-repository-mysql"
 
 // Repository defines a MySQL-based movie metadata repository.
 type Repository struct {
@@ -43,6 +46,9 @@ func NewWithMigration(DSN string, fs fs.FS, dir string) (*Repository, error) {
 
 // Get retrieves movie metadata for by movie id.
 func (r *Repository) Get(ctx context.Context, id string) (*model.Metadata, error) {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/Get")
+	defer span.End()
+
 	query := `SELECT title, description, director FROM movies WHERE id = ?`
 
 	var title, description, director string
@@ -66,6 +72,9 @@ func (r *Repository) Get(ctx context.Context, id string) (*model.Metadata, error
 
 // Put adds movie metadata for a given movie id.
 func (r *Repository) Put(ctx context.Context, id string, metadata *model.Metadata) error {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/Put")
+	defer span.End()
+
 	qeury := `INSERT INTO movies (id,title,description,director) VALUES (?, ?, ?, ?)`
 
 	_, err := r.db.ExecContext(ctx, qeury, id, metadata.Title, metadata.Description, metadata.Director)

@@ -34,8 +34,6 @@ func NewIngester(addr string, groupID string, topic string) (*Ingester, error) {
 // Ingest starts ingestion from Kafka and returns a channel containing
 // rating events representing the data consumed from the topic.
 func (i *Ingester) Ingest(ctx context.Context) (chan model.RatingEvent, error) {
-	fmt.Println("Start kafka ingester")
-
 	if err := i.consumer.SubscribeTopics([]string{i.topic}, nil); err != nil {
 		return nil, err
 	}

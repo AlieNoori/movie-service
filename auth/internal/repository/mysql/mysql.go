@@ -6,6 +6,7 @@ import (
 	"io/fs"
 
 	_ "github.com/go-sql-driver/mysql"
+	"go.opentelemetry.io/otel"
 	"movieexample.com/auth/internal/repository"
 	"movieexample.com/auth/pkg/model"
 	"movieexample.com/pkg/migrate"
@@ -15,6 +16,8 @@ import (
 type Repository struct {
 	db *sql.DB
 }
+
+const tracerID = "auth-repository-mysql"
 
 // New creates a new MySQL-based user repository.
 func New(DSN string) (*Repository, error) {
@@ -43,6 +46,9 @@ func NewWithMigration(DSN string, fs fs.FS, dir string) (*Repository, error) {
 
 // Put adds or updates a user.
 func (r *Repository) Put(ctx context.Context, user *model.User) error {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/Put")
+	defer span.End()
+
 	query := `
 		INSERT INTO users (id, username, email, password_hash, first_name, last_name, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, NOW())
@@ -56,7 +62,7 @@ func (r *Repository) Put(ctx context.Context, user *model.User) error {
 	_, err := r.db.ExecContext(
 		ctx,
 		query,
-		user.ID, user.Email, user.Username, user.PasswordHash, user.FirstName, user.LastName,
+		user.ID, user.Username, user.Email, user.PasswordHash, user.FirstName, user.LastName,
 	)
 
 	return err
@@ -64,6 +70,8 @@ func (r *Repository) Put(ctx context.Context, user *model.User) error {
 
 // GetByEmail retrieves a user by their email address.
 func (r *Repository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/GetByEmail")
+	defer span.End()
 	query := `SELECT id,username,password_hash,first_name,last_name,created_at FROM users
 	WHERE email = ?`
 
@@ -89,6 +97,9 @@ func (r *Repository) GetByEmail(ctx context.Context, email string) (*model.User,
 
 // GetByID retrieves a user by their unique ID.
 func (r *Repository) GetByID(ctx context.Context, id string) (*model.User, error) {
+	_, span := otel.Tracer(tracerID).Start(ctx, "Repository/GetByID")
+	defer span.End()
+
 	query := `SELECT username,email,password_hash,first_name,last_name,created_at FROM users
 	WHERE id = ?`
 
