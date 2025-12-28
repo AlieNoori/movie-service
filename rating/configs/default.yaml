@@ -9,3 +9,5 @@ kafka:
   topic: ratings
 jaeger:
   url: http://localhost:14268/api/traces
+prometheus:
+  metricsPort: 8092

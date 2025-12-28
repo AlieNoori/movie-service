@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -25,6 +26,8 @@ import (
 	"movieexample.com/pkg/tracing"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/ratelimit"
+	"github.com/uber-go/tally/v4"
+	"github.com/uber-go/tally/v4/prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -75,6 +78,40 @@ func main() {
 	}
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
+
+	reporter := prometheus.NewReporter(prometheus.Options{Registerer: nil})
+	scope, closer := tally.NewRootScope(tally.ScopeOptions{
+		Prefix:         serviceName,
+		Tags:           map[string]string{"env": "prod"},
+		CachedReporter: reporter,
+		Separator:      prometheus.DefaultSeparator,
+		SanitizeOptions: &tally.SanitizeOptions{
+			NameCharacters: tally.ValidCharacters{
+				Ranges:     tally.AlphanumericRange,
+				Characters: []rune{'_'},
+			},
+			KeyCharacters: tally.ValidCharacters{
+				Ranges:     tally.AlphanumericRange,
+				Characters: []rune{'_'},
+			},
+			ValueCharacters: tally.ValidCharacters{
+				Ranges:     tally.AlphanumericRange,
+				Characters: []rune{'_'},
+			},
+			ReplacementCharacter: '_',
+		},
+	}, 10*time.Second)
+	defer closer.Close()
+
+	startCounter := scope.Counter("service_starts")
+	startCounter.Inc(1)
+
+	http.Handle("/metrics", reporter.HTTPHandler())
+	go func() {
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Prometheus.MetricsPort), nil); err != nil {
+			logger.Fatal("Failed to start the metrics handler", zap.Error(err))
+		}
+	}()
 
 	registry, err := consul.NewRegistry(cfg.ServiceDiscovery.Consul.Address)
 	if err != nil {

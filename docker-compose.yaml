@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: movieexample
     volumes:
-      - ./data/mysql:/var/lib/mysql
+      - db_data:/var/lib/mysql
 
   redis:
     image: redis:alpine3.22
@@ -52,3 +52,29 @@ services:
       - 14268:14268
       - 14269:14269
       - 9411:9411
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    ports:
+      - 9093:9093
+    volumes:
+      - ./configs/:/etc/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+
+volumes:
+  db_data:
+  prometheus_data:
